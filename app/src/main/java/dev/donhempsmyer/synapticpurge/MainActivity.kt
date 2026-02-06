@@ -1,11 +1,20 @@
 package dev.donhempsmyer.synapticpurge
 
-import android.R
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.InfiniteRepeatableSpec
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.donhempsmyer.synapticpurge.ui.theme.AppTheme
@@ -132,22 +143,78 @@ fun PurgeScreen(isRecording: Boolean, modifier: Modifier = Modifier) {
         }
 
         //Layer 2 for blackout overlay when recording
-        if (isRecording) {
+        AnimatedVisibility(
+            visible = isRecording,
+            enter = fadeIn(animationSpec = tween(500)) + scaleIn(
+                initialScale = 0.1f, // Start very small (button sized)
+                transformOrigin = TransformOrigin(0.5f, 0.9f), // Pin to bottom center
+                animationSpec = tween(500)
+            ),
+            exit = fadeOut(animationSpec = tween(500)) + scaleOut(
+                targetScale = 0.1f,
+                transformOrigin = TransformOrigin(0.5f, 0.9f),
+                animationSpec = tween(500)
+            )
+        ) {
+            //setup animation loop for the circle
+            val infiniteTransition = rememberInfiniteTransition(label = "breathing_glow")
+            val breathingAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.5f, // starting semi-transparent
+                targetValue = 1f, //fully opaque
+                animationSpec = InfiniteRepeatableSpec(
+                    animation = tween(1500, easing = LinearEasing),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse // from 1 back to 0.5
+                ),
+                label = "breathing_alpha"
+            )
+            val breathingScale by infiniteTransition.animateFloat(
+                initialValue = 0.95f,
+                targetValue = 1.05f,
+                animationSpec = InfiniteRepeatableSpec(
+                    animation = tween(1500, easing = LinearEasing),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                ),
+                label = "breathing_scale"
+            )
+
             Surface(
                 modifier = Modifier.fillMaxSize(),
+                shape = MaterialTheme.shapes.extraLarge,
                 color = Color.Black.copy(alpha = 0.9f)
             ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Recording...",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White
-                    )
-                    //Future animation
+                    Box(contentAlignment = Alignment.Center) {
+                        // 1. THE GLOW (The "Breathing" part)
+                        // We use a Canvas or a simple Surface to draw the glow circle
+                        Surface(
+                            modifier = Modifier
+                                .size(200.dp) // The size of the glow area
+                                .graphicsLayer(
+                                    scaleX = breathingScale * 1.5f, // Make the glow bigger than the text
+                                    scaleY = breathingScale * 1.5f,
+                                    alpha = breathingAlpha // This makes the GLOW fade, not the text
+                                ),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) // Pick a "calming" color here
+                        ) { }
+
+                        // 2. THE TEXT (Stays solid white so it's readable)
+                        Text(
+                            text = "Listening...",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White,
+                            modifier = Modifier.graphicsLayer(
+                                // We can give the text a tiny bit of scale too if you like
+                                scaleX = breathingScale,
+                                scaleY = breathingScale
+                            )
+                        )
+                    }
                 }
+
             }
         }
     }
