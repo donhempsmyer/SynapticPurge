@@ -12,4 +12,17 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Keystores
+*.jks
+*.keystore
+
+# Google Services
+google-services.json
+
+# Secrets & Local Properties
 local.properties
+secrets.properties
+
+# Memory dumps
+*.hprof
