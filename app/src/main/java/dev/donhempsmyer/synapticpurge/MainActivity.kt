@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.donhempsmyer.synapticpurge.ui.theme.AppTheme
@@ -65,6 +66,8 @@ class MainActivity : ComponentActivity() {
             AppTheme {
 
                 val isRecording by viewModel.isRecording
+                val transcriptionText by viewModel.transcription
+
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -102,6 +105,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     PurgeScreen(
                         isRecording = isRecording,
+                        transcription = transcriptionText,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -111,7 +115,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PurgeScreen(isRecording: Boolean, modifier: Modifier = Modifier) {
+fun PurgeScreen(isRecording: Boolean, transcription: String, modifier: Modifier = Modifier) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -130,17 +134,17 @@ fun PurgeScreen(isRecording: Boolean, modifier: Modifier = Modifier) {
             // NOTES LIST (The "Brain Dump" area)
             // Weight(1f) tells the list to take up all available space,
             // pushing the button to the bottom.
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                item {
-                    Text(
-                        "Your transcriptions will appear here...",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                Text(
+                    text = transcription,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 
@@ -226,6 +230,9 @@ fun PurgeScreen(isRecording: Boolean, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     AppTheme {
-        PurgeScreen(isRecording = false)
+        PurgeScreen(
+            isRecording = false,
+            transcription = "This is what a captured thought looks like"
+        )
     }
 }
