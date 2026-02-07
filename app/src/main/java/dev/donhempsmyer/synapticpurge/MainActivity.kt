@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,8 +32,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,12 +44,15 @@ import dev.donhempsmyer.synapticpurge.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
 
+    private val viewModel: PurgeViewModel by viewModels()
+
+
     //Permission request
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Permission is granted.
+            viewModel.toggleRecording()
         } else {
             // Explain to the user that the feature is unavailable because the
             // features requires a permission that the user has denied.
@@ -62,7 +64,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
 
-                var isRecording by remember { mutableStateOf(false) }
+                val isRecording by viewModel.isRecording
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -71,7 +73,7 @@ class MainActivity : ComponentActivity() {
                         Button(
                             onClick = {
                                 if (isRecording) {
-                                    isRecording = false
+                                    viewModel.toggleRecording()
                                 } else {
                                     val permission = android.Manifest.permission.RECORD_AUDIO
                                     val isGranted = androidx.core.content.ContextCompat.checkSelfPermission(
@@ -79,7 +81,7 @@ class MainActivity : ComponentActivity() {
                                         permission
                                     ) == android.content.pm.PackageManager.PERMISSION_GRANTED
                                     if (isGranted) {
-                                        isRecording = true
+                                        viewModel.toggleRecording()
                                     } else {
                                         //Trigger permission request popup
                                         requestPermissionLauncher.launch(permission)
