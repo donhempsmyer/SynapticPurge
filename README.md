@@ -4,7 +4,7 @@ A focused Android application for capturing audio recordings and generating auto
 
 ---
 
-## ✨ Features
+## ✨ MVP Features
 
 - **Full-Bleed Recording UI**  
   Minimal, immersive recording overlay with “breathing” visual feedback.
@@ -18,6 +18,28 @@ A focused Android application for capturing audio recordings and generating auto
 - **Material 3 Design**  
   Built with modern Jetpack Compose components and smooth state-driven animations.
 
+- **Audio Playback**
+  Play your audio recordings instead of reading the transcriptions
+
+---
+
+## ✨✨ Beta Features
+
+- **Summarization and Organization**
+  Gemini summarizes transcriptions and outputs them into organized notes, tasks and plans.
+  View your summaries in an organized page seperated by Dates.
+
+- **Settings**
+  Usefull settings for UI themes and managing your files.
+
+---
+
+## ✨✨✨ Possible Alpha Feature
+
+- **Privacy Mode**
+  Recordings and transcriptions remain private and offline using the on-device Whisper.cpp transcription model.
+  Transcription summarization accomplished by on-device Gemini NANO.
+  
 ---
 
 ## 🧱 Tech Stack
