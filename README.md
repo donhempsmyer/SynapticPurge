@@ -49,6 +49,7 @@ A focused Android application for capturing audio recordings and generating auto
 - **AI:** Gemini via Firebase AI Logic (Google AI / Firebase AI integration)
 - **Audio:** `MediaRecorder`
 - **Language:** Kotlin + Coroutines / Flow (StateFlow)
+- **Dependency Injection** Hilt
 
 ---
 
