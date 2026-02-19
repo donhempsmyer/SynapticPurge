@@ -1,4 +1,4 @@
-package dev.donhempsmyer.synapticpurge.ui.screens
+package dev.donhempsmyer.synapticpurge.ui.screens.home
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -16,12 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.donhempsmyer.synapticpurge.helpers.AudioPlayer
 import dev.donhempsmyer.synapticpurge.viewModels.PurgeViewModel
 
 @Composable
@@ -33,6 +36,11 @@ fun PurgeRoute(
 
     val isRecording by viewModel.isRecording.collectAsStateWithLifecycle()
     val recordings by viewModel.recordings.collectAsStateWithLifecycle()
+
+    val audioPlayer = remember(context) { AudioPlayer(context) }
+    DisposableEffect(Unit) {
+        onDispose {audioPlayer.stop()}
+    }
 
     val animatedContainerColor by animateColorAsState(
         targetValue = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
@@ -63,10 +71,11 @@ fun PurgeRoute(
                 onClick = onRecordFabClick,
                 containerColor = animatedContainerColor,
                 icon = {
-                    Icon(
-                        imageVector = if (isRecording) Icons.Filled.Stop else Icons.Filled.Mic,
-                        contentDescription = if (isRecording) "Stop recording" else "Start recording"
-                    )
+                    if (isRecording) {
+                        Icon(Icons.Filled.Stop, contentDescription = "Stop recording")
+                    } else {
+                        Icon(Icons.Filled.Mic, contentDescription = "Start recording")
+                    }
                 },
                 text = { Text(if (isRecording) "STOP PURGE" else "START PURGE") }
             )
@@ -76,6 +85,8 @@ fun PurgeRoute(
         PurgeScreen(
             isRecording = isRecording,
             recordings = recordings,
+            onPlayRecording = { rec -> audioPlayer.play(rec.filePath)},
+            onDeleteRecording = { rec -> viewModel.deleteRecording(rec)},
             modifier = Modifier.padding(innerPadding)
         )
     }
