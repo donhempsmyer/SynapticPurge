@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
-import dev.donhempsmyer.synapticpurge.ui.screens.PurgeRoute
+import dev.donhempsmyer.synapticpurge.ui.screens.home.PurgeRoute
 import dev.donhempsmyer.synapticpurge.ui.theme.AppTheme
 import dev.donhempsmyer.synapticpurge.viewModels.PurgeViewModel
 

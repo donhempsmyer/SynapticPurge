@@ -1,8 +1,9 @@
-package dev.donhempsmyer.synapticpurge.ui.screens
+package dev.donhempsmyer.synapticpurge.ui.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.InfiniteRepeatableSpec
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -20,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,14 +45,14 @@ import dev.donhempsmyer.synapticpurge.data.Recording
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.text.format
-
 
 
 @Composable
 fun PurgeScreen(
     isRecording: Boolean,
     recordings: List<Recording>,
+    onPlayRecording: (Recording) -> Unit,
+    onDeleteRecording: (Recording) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -83,7 +86,11 @@ fun PurgeScreen(
                         items = recordings,
                         key = { it.id }
                     ) { recording ->
-                        RecordingRow(recording = recording)
+                        RecordingRow(
+                            recording = recording,
+                            onPlayClick = onPlayRecording,
+                            onDeleteClick = onDeleteRecording
+                        )
                     }
                 }
             }
@@ -93,7 +100,7 @@ fun PurgeScreen(
             visible = isRecording,
             enter = fadeIn(animationSpec = tween(500)) + scaleIn(
                 initialScale = 0.1f, // Start very small (button sized)
-                transformOrigin = TransformOrigin(0.5f, 0.9f), // Pin to bottom center
+                transformOrigin = TransformOrigin(0.5f, 0.9f),
                 animationSpec = tween(500)
             ),
             exit = fadeOut(animationSpec = tween(500)) + scaleOut(
@@ -105,11 +112,11 @@ fun PurgeScreen(
             //setup animation loop for the circle
             val infiniteTransition = rememberInfiniteTransition(label = "breathing_glow")
             val breathingAlpha by infiniteTransition.animateFloat(
-                initialValue = 0.5f, // starting semi-transparent
-                targetValue = 1f, //fully opaque
+                initialValue = 0.5f,
+                targetValue = 1f,
                 animationSpec = InfiniteRepeatableSpec(
                     animation = tween(1500, easing = LinearEasing),
-                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse // from 1 back to 0.5
+                    repeatMode = RepeatMode.Reverse // from 1 back to 0.5
                 ),
                 label = "breathing_alpha"
             )
@@ -118,7 +125,7 @@ fun PurgeScreen(
                 targetValue = 1.05f,
                 animationSpec = InfiniteRepeatableSpec(
                     animation = tween(1500, easing = LinearEasing),
-                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                    repeatMode = RepeatMode.Reverse
                 ),
                 label = "breathing_scale"
             )
@@ -135,27 +142,23 @@ fun PurgeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        // 1. THE GLOW (The "Breathing" part)
-                        // We use a Canvas or a simple Surface to draw the glow circle
                         Surface(
                             modifier = Modifier
-                                .size(200.dp) // The size of the glow area
+                                .size(200.dp)
                                 .graphicsLayer(
-                                    scaleX = breathingScale * 1.5f, // Make the glow bigger than the text
+                                    scaleX = breathingScale * 1.5f,
                                     scaleY = breathingScale * 1.5f,
-                                    alpha = breathingAlpha // This makes the GLOW fade, not the text
+                                    alpha = breathingAlpha
                                 ),
-                            shape = androidx.compose.foundation.shape.CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) // Pick a "calming" color here
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                         ) { }
 
-                        // 2. THE TEXT (Stays solid white so it's readable)
                         Text(
                             text = "Listening...",
                             style = MaterialTheme.typography.headlineSmall,
                             color = Color.White,
                             modifier = Modifier.graphicsLayer(
-                                // We can give the text a tiny bit of scale too if you like
                                 scaleX = breathingScale,
                                 scaleY = breathingScale
                             )
@@ -169,7 +172,9 @@ fun PurgeScreen(
 
 @Composable
 private fun RecordingRow(
-    recording: Recording
+    recording: Recording,
+    onPlayClick: (Recording) -> Unit,
+    onDeleteClick: (Recording) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -185,7 +190,7 @@ private fun RecordingRow(
             .padding(vertical = 8.dp),
         tonalElevation = 2.dp,
         shape = MaterialTheme.shapes.medium,
-        onClick = { expanded = !expanded } // Material3 Surface supports clickable overload in newer versions
+        onClick = { expanded = !expanded }
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
@@ -212,9 +217,9 @@ private fun RecordingRow(
             if (expanded) {
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TextButton(onClick = { /* TODO: play audio */ }) { Text("Play") }
-                    TextButton(onClick = { /* TODO: share */ }) { Text("Share") }
-                    TextButton(onClick = { /* TODO: delete */ }) { Text("Delete") }
+                    TextButton(onClick = { onPlayClick(recording)}) { Text("Play") }
+                    Spacer(Modifier.width(16.dp))
+                    TextButton(onClick = { onDeleteClick(recording)}) { Text("Delete") }
                 }
             }
         }

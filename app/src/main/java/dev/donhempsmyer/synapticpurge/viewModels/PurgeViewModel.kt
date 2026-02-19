@@ -128,7 +128,7 @@ class PurgeViewModel @Inject constructor(
 
                 val prompt = content {
                     inlineData(audioBytes, "audio/m4a")
-                    text("Please accurately transcribe this audio.")
+                    text("Please accurately transcribe this audio. If no words are detected, respond with 'No words detected'.")
                 }
 
                 val response = model.generateContent(prompt)
@@ -145,6 +145,13 @@ class PurgeViewModel @Inject constructor(
             } finally {
                 _activeRecordingId.value = null
             }
+        }
+    }
+
+    fun deleteRecording(recording: Recording) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteRecording(recording)
+            runCatching { File(recording.filePath).delete()}
         }
     }
 }
