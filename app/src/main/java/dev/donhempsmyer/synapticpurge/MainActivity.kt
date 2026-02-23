@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
-import dev.donhempsmyer.synapticpurge.ui.PurgeAppRoot
+import dev.donhempsmyer.synapticpurge.navigation.PurgeAppRoot
 import dev.donhempsmyer.synapticpurge.ui.theme.AppTheme
 
 @AndroidEntryPoint

@@ -62,11 +62,6 @@ fun PurgeScreen(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Synaptic Purge",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
             LazyColumn(
                 modifier = Modifier

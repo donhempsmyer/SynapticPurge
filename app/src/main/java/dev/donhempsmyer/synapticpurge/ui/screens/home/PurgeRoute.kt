@@ -18,7 +18,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.donhempsmyer.synapticpurge.helpers.AudioPlayer
-import dev.donhempsmyer.synapticpurge.ui.PurgeFabState
 import dev.donhempsmyer.synapticpurge.viewModels.PurgeViewModel
 
 @Composable
@@ -42,7 +41,7 @@ fun PurgeRoute(
     }
 
     val onRecordFabClick = {
-        audioPlayer.stop() // optional: prevent overlap
+        audioPlayer.stop()
 
         if (isRecording) {
             viewModel.toggleRecording()
