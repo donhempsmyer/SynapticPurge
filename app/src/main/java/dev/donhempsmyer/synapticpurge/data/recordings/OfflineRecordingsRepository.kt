@@ -1,4 +1,4 @@
-package dev.donhempsmyer.synapticpurge.data
+package dev.donhempsmyer.synapticpurge.data.recordings
 
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +26,9 @@ class OfflineRecordingsRepository @Inject constructor(
     ): List<Recording> =
         recordingsDao.getTodayVisibleRecordingsOnce(startMillis, endMillis)
 
+    override fun getVisibleRecordingsStream(): Flow<List<Recording>> =
+        recordingsDao.getVisibleRecordings()
+
     override suspend fun insertRecording(recording: Recording): Long =
         recordingsDao.insert(recording)
 
@@ -52,5 +55,8 @@ class OfflineRecordingsRepository @Inject constructor(
 
     override fun searchRecordingsStream(query: String): Flow<List<Recording>> =
         recordingsDao.searchRecordings(query)
+
+    override suspend fun getRecordingsByIdsOnce(ids: List<Long>): List<Recording> =
+        if (ids.isEmpty()) emptyList() else recordingsDao.getRecordingsByIdsOnce(ids)
 
 }

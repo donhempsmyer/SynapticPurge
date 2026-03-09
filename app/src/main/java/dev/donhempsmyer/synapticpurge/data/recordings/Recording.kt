@@ -1,4 +1,4 @@
-package dev.donhempsmyer.synapticpurge.data
+package dev.donhempsmyer.synapticpurge.data.recordings
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -18,5 +18,8 @@ data class Recording(
     val transcription: String = "",
 
     @ColumnInfo(name = "hidden_from_purge", defaultValue = "0")
-    val hiddenFromPurge: Boolean = false
+    val hiddenFromPurge: Boolean = false,
+
+    @ColumnInfo(name = "duration_ms", defaultValue = "0")
+    val durationMs: Int = 0
 )

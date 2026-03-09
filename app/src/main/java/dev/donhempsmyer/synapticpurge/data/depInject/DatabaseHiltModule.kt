@@ -6,10 +6,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dev.donhempsmyer.synapticpurge.data.OfflineRecordingsRepository
-import dev.donhempsmyer.synapticpurge.data.RecordingsDao
+import dev.donhempsmyer.synapticpurge.data.collections.CollectionsDao
+import dev.donhempsmyer.synapticpurge.data.collections.CollectionsRepository
+import dev.donhempsmyer.synapticpurge.data.collections.OfflineCollectionsRepository
+import dev.donhempsmyer.synapticpurge.data.recordings.OfflineRecordingsRepository
+import dev.donhempsmyer.synapticpurge.data.recordings.RecordingsDao
 import dev.donhempsmyer.synapticpurge.data.RecordingsDatabase
-import dev.donhempsmyer.synapticpurge.data.RecordingsRepository
+import dev.donhempsmyer.synapticpurge.data.recordings.RecordingsRepository
 import javax.inject.Singleton
 
 @Module
@@ -27,9 +30,19 @@ object DatabaseHiltModule {
         return database.recordingsDao()
     }
 
+
+    @Provides
+    fun provideCollectionsDao(db: RecordingsDatabase): CollectionsDao =
+        db.collectionsDao()
+
     @Provides
     @Singleton
     fun provideRecordingsRepository(recordingsDao: RecordingsDao): RecordingsRepository {
         return OfflineRecordingsRepository(recordingsDao)
     }
+
+    @Provides
+    @Singleton
+    fun provideCollectionsRepository(collectionsDao: CollectionsDao): CollectionsRepository =
+        OfflineCollectionsRepository(collectionsDao)
 }

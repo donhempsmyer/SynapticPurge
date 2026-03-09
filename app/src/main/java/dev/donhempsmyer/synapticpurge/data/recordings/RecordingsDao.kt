@@ -1,4 +1,4 @@
-package dev.donhempsmyer.synapticpurge.data
+package dev.donhempsmyer.synapticpurge.data.recordings
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -44,6 +44,13 @@ interface RecordingsDao {
         endMillis: Long
     ): Flow<List<Recording>>
 
+    @Query("""
+    SELECT * FROM recordings
+    WHERE hidden_from_purge = 0
+    ORDER BY timestamp DESC
+""")
+    fun getVisibleRecordings(): Flow<List<Recording>>
+
 
     @Query("""
         SELECT * FROM recordings
@@ -56,6 +63,16 @@ interface RecordingsDao {
         startMillis: Long,
         endMillis: Long
     ): List<Recording>
+
+
+    @Query("""
+    SELECT * FROM recordings
+    WHERE id IN (:ids)
+    ORDER BY timestamp DESC
+""")
+    suspend fun getRecordingsByIdsOnce(ids: List<Long>): List<Recording>
+
+
 
     // Hide/unhide used to "clear" Purge after conversion
     @Query("UPDATE recordings SET hidden_from_purge = 1 WHERE id IN (:ids)")

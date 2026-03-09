@@ -1,4 +1,4 @@
-package dev.donhempsmyer.synapticpurge.data
+package dev.donhempsmyer.synapticpurge.data.recordings
 
 import kotlinx.coroutines.flow.Flow
 
@@ -8,6 +8,11 @@ interface RecordingsRepository {
     fun getRecordingStream(id: Long): Flow<Recording?>
 
     fun getTodayVisibleRecordingsStream(startMillis: Long, endMillis: Long): Flow<List<Recording>>
+
+    fun getVisibleRecordingsStream(): Flow<List<Recording>>
+
+    fun searchRecordingsStream(query: String): Flow<List<Recording>>
+
     suspend fun getTodayVisibleRecordingsOnce(startMillis: Long, endMillis: Long): List<Recording>
 
     suspend fun insertRecording(recording: Recording): Long
@@ -21,5 +26,6 @@ interface RecordingsRepository {
 
     suspend fun getRecordingOnce(id: Long): Recording?
 
-    fun searchRecordingsStream(query: String): Flow<List<Recording>>
+    suspend fun getRecordingsByIdsOnce(ids: List<Long>): List<Recording>
+
 }

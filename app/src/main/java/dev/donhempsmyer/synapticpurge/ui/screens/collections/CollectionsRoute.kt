@@ -1,8 +1,10 @@
-package dev.donhempsmyer.synapticpurge.ui.screens.archive
+package dev.donhempsmyer.synapticpurge.ui.screens.collections
 
 
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,27 +14,19 @@ import dev.donhempsmyer.synapticpurge.ui.components.ScreenChrome
 import dev.donhempsmyer.synapticpurge.ui.components.TopBarSpec
 
 @Composable
-fun ArchiveRoute(
+fun CollectionsRoute(
     searchQuery: String,
-    onOpenRecording: (Long) -> Unit,
+    onOpenCollection: (Long) -> Unit,
     onChrome: (ScreenChrome) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ArchiveViewModel = hiltViewModel()
+    viewModel: CollectionsViewModel = hiltViewModel()
 ) {
-
-
-    val recordings by viewModel.recordings.collectAsStateWithLifecycle()
-
-    val scope = rememberCoroutineScope()
-    val audioPlayback = remember { AudioPlayback(scope) }
+    LaunchedEffect(searchQuery) { viewModel.onQueryChange(searchQuery) }
+    val collections by viewModel.collections.collectAsStateWithLifecycle()
 
     var isSelecting by rememberSaveable { mutableStateOf(false) }
     var selectedIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
 
-    val enterSelection = {
-        isSelecting = true
-        selectedIds = emptySet()
-    }
     val clearSelection = { selectedIds = emptySet() }
     val cancelSelection = {
         isSelecting = false
@@ -46,22 +40,12 @@ fun ArchiveRoute(
 
     val selectAll = {
         if (!isSelecting) isSelecting = true
-        selectedIds = recordings.map { it.id }.toSet()
+        selectedIds = collections.map { it.id }.toSet()
     }
 
-    DisposableEffect(Unit) {
-        onDispose { audioPlayback.stop() }
-    }
+    val selectedCount = selectedIds.size
 
-    LaunchedEffect(searchQuery) {
-        viewModel.onQueryChange(searchQuery)
-    }
-
-    LaunchedEffect(isSelecting) {
-        if (isSelecting) audioPlayback.stop()
-    }
-
-    LaunchedEffect(isSelecting, selectedIds.size) {
+    LaunchedEffect(isSelecting, selectedCount) {
         onChrome(
             if (isSelecting) {
                 ScreenChrome(
@@ -70,11 +54,11 @@ fun ArchiveRoute(
                         onCancel = { cancelSelection() }
                     ),
                     bottomBar = BottomBarSpec.Selection(
-                        selectedCount = selectedIds.size,
+                        selectedCount = selectedCount,
                         onSelectAll = selectAll,
                         onClear = clearSelection,
                         onPrimary = {
-                            viewModel.deleteRecordingsByIds(selectedIds.toList())
+                            viewModel.deleteCollectionsByIds(selectedIds.toList())
                             cancelSelection()
                         },
                         primaryLabel = "Delete",
@@ -87,10 +71,9 @@ fun ArchiveRoute(
         )
     }
 
-    ArchiveScreen(
-        recordings = recordings,
-        onOpenRecording = onOpenRecording,
-        audioPlayback = audioPlayback,
+    CollectionsScreen(
+        collections = collections,
+        onOpenCollection = onOpenCollection,
         isSelecting = isSelecting,
         selectedIds = selectedIds,
         onCheckboxClick = onCheckboxClick,
