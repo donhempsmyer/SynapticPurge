@@ -1,5 +1,6 @@
-package dev.donhempsmyer.synapticpurge.data
+package dev.donhempsmyer.synapticpurge.data.recordings
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -14,5 +15,11 @@ data class Recording(
     val timestamp: Long = System.currentTimeMillis(),
     val filePath: String,
     val fileName: String,
-    val transcription: String = ""
+    val transcription: String = "",
+
+    @ColumnInfo(name = "hidden_from_purge", defaultValue = "0")
+    val hiddenFromPurge: Boolean = false,
+
+    @ColumnInfo(name = "duration_ms", defaultValue = "0")
+    val durationMs: Int = 0
 )

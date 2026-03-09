@@ -14,62 +14,87 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import dev.donhempsmyer.synapticpurge.data.Recording
+import dev.donhempsmyer.synapticpurge.data.recordings.Recording
+import dev.donhempsmyer.synapticpurge.helpers.AudioPlayback
+import dev.donhempsmyer.synapticpurge.ui.components.CenteredSectionHeader
+import dev.donhempsmyer.synapticpurge.ui.components.formatSectionHeader
+import dev.donhempsmyer.synapticpurge.ui.AudioPlayer
+import dev.donhempsmyer.synapticpurge.ui.components.ExpandableSelectableCard
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
-
 
 @Composable
 fun PurgeScreen(
     isRecording: Boolean,
     recordings: List<Recording>,
-    onPlayRecording: (Recording) -> Unit,
-    onDeleteRecording: (Recording) -> Unit,
+    isSelecting: Boolean,
+    selectedIds: Set<Long>,
+    onCheckboxClick: (Long) -> Unit,
+    audioPlayback: AudioPlayback,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
 
+    // Auto-scroll to newest item (top of list)
+    LaunchedEffect(recordings.firstOrNull()?.id) {
+        if (recordings.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+    }
+
+    LaunchedEffect(isSelecting) {
+        if (isSelecting) audioPlayback.stop()
+    }
+
+    // Group recordings by date for sticky headers
+    val zone = remember { ZoneId.systemDefault() }
+    val today = remember { LocalDate.now(zone) }
+
+    val grouped: Map<LocalDate, List<Recording>> = remember(recordings) {
+        recordings.groupBy { rec ->
+            Instant.ofEpochMilli(rec.timestamp).atZone(zone).toLocalDate()
+        }
+    }
+
+    val sectionDates: List<LocalDate> = remember(grouped, today) {
+        val dates = grouped.keys.sortedDescending()
+        if (dates.contains(today)) listOf(today) + dates.filter { it != today } else dates
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Synaptic Purge",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
@@ -78,19 +103,31 @@ fun PurgeScreen(
                     item {
                         Text(
                             "Your transcriptions will appear here...",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(16.dp)
                         )
                     }
                 } else {
-                    items(
-                        items = recordings,
-                        key = { it.id }
-                    ) { recording ->
-                        RecordingRow(
-                            recording = recording,
-                            onPlayClick = onPlayRecording,
-                            onDeleteClick = onDeleteRecording
-                        )
+                    sectionDates.forEach { date ->
+
+                        stickyHeader(key = "purge_header_$date") {
+                            CenteredSectionHeader(text = formatSectionHeader(date, today))
+                        }
+
+                        val dayItems = grouped[date].orEmpty()
+
+                        items(
+                            items = dayItems,
+                            key = { it.id }
+                        ) { recording ->
+                            RecordingRow(
+                                recording = recording,
+                                isSelecting = isSelecting,
+                                isSelected = selectedIds.contains(recording.id),
+                                onCheckboxClick = { onCheckboxClick(recording.id) },
+                                audioPlayback = audioPlayback
+                                )
+                        }
                     }
                 }
             }
@@ -99,7 +136,7 @@ fun PurgeScreen(
         AnimatedVisibility(
             visible = isRecording,
             enter = fadeIn(animationSpec = tween(500)) + scaleIn(
-                initialScale = 0.1f, // Start very small (button sized)
+                initialScale = 0.1f,
                 transformOrigin = TransformOrigin(0.5f, 0.9f),
                 animationSpec = tween(500)
             ),
@@ -109,14 +146,13 @@ fun PurgeScreen(
                 animationSpec = tween(500)
             )
         ) {
-            //setup animation loop for the circle
             val infiniteTransition = rememberInfiniteTransition(label = "breathing_glow")
             val breathingAlpha by infiniteTransition.animateFloat(
                 initialValue = 0.5f,
                 targetValue = 1f,
                 animationSpec = InfiniteRepeatableSpec(
                     animation = tween(1500, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse // from 1 back to 0.5
+                    repeatMode = RepeatMode.Reverse
                 ),
                 label = "breathing_alpha"
             )
@@ -170,59 +206,52 @@ fun PurgeScreen(
     }
 }
 
+
+
 @Composable
 private fun RecordingRow(
     recording: Recording,
-    onPlayClick: (Recording) -> Unit,
-    onDeleteClick: (Recording) -> Unit
+    isSelecting: Boolean,
+    isSelected: Boolean,
+    onCheckboxClick: () -> Unit,
+    audioPlayback: AudioPlayback
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     val formattedTime = remember(recording.timestamp) {
         val local = Locale.getDefault()
         val sdf = SimpleDateFormat("MMM dd, yyyy - hh:mm a", local)
         sdf.format(Date(recording.timestamp))
     }
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        tonalElevation = 2.dp,
-        shape = MaterialTheme.shapes.medium,
-        onClick = { expanded = !expanded }
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+    ExpandableSelectableCard(
+        id = recording.id,
+        isSelecting = isSelecting,
+        isSelected = isSelected,
+        onCheckboxClick = onCheckboxClick,
+        header = {
             Text(
                 text = formattedTime,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
+            Text(recording.fileName, style = MaterialTheme.typography.labelMedium)
+            Spacer(Modifier.height(4.dp))
             Text(
-                text = recording.fileName,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                recording.transcription.ifBlank { "..." },
+                maxLines = 3
             )
+        },
+        expandedBody = {
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = recording.transcription.ifBlank { "..." },
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = if (expanded) Int.MAX_VALUE else 3,
-                overflow = TextOverflow.Ellipsis
+
+            AudioPlayer(
+                playback = audioPlayback,
+                filePath = recording.filePath,
+                durationMsHint = recording.durationMs,
+                modifier = Modifier.padding(top = 8.dp)
             )
-
-            if (expanded) {
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    TextButton(onClick = { onPlayClick(recording)}) { Text("Play") }
-                    Spacer(Modifier.width(16.dp))
-                    TextButton(onClick = { onDeleteClick(recording)}) { Text("Delete") }
-                }
-            }
         }
-    }
+    )
 }
 
