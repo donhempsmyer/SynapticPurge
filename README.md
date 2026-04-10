@@ -34,14 +34,6 @@ A focused Android application for capturing audio recordings and generating auto
 
 ---
 
-## ✨✨✨ Possible Alpha Feature
-
-- **Privacy Mode**  
-  Recordings and transcriptions remain private and offline using the on-device Whisper.cpp transcription model.
-  Transcription summarization accomplished by on-device Gemini NANO.
-  
----
-
 ## 🧱 Tech Stack
 
 - **UI:** Jetpack Compose (Material 3)
